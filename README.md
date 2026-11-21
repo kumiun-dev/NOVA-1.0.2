@@ -4,7 +4,7 @@ NOVA 是面向外贸团队的 CRM 与业务协作系统。本仓库提供部署�
 
 ## 产品预览
 
-![NOVA 登录页面](login.png)
+![NOVA 登录页面](docs/screenshots/login.png)
 
 ## 主要功能
 
@@ -44,4 +44,5 @@ docker compose up -d --build
 ## 技术栈
 
 Next.js 15、React 19、TypeScript、SQLite、Docker Compose、Node.js 22。
+
 
