@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.nova-shell {
+  isolation: isolate;
+  background: radial-gradient(ellipse at 12% 12%, #e9e1fb 0, transparent 48%), radial-gradient(ellipse at 85% 7%, #e1f1ed 0, transparent 38%), radial-gradient(ellipse at 95% 80%, #fae7de 0, transparent 40%), radial-gradient(ellipse at 25% 95%, #f5e5ef 0, transparent 40%), #f7f6fa;
+}
+.nova-tech-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+.nova-sidebar {
+  position: relative;
+  background: linear-gradient(155deg, rgba(252,251,255,.95) 5%, rgba(239,233,253,.90) 48%, rgba(226,241,235,.80) 80%, rgba(249,231,222,.85)) !important;
+  box-shadow: 6px 0 36px #51409a09;
+  backdrop-filter: blur(18px);
+  z-index: 10;
+}
+.nova-sidebar-toggle {
+  position: absolute; right: -16px; top: 29px; width: 32px; height: 44px;
+  display: grid; place-items: center;
+  border: 1px solid #ffffffb3; border-radius: 12px;
+  background: linear-gradient(145deg, #7964dd, #5143b7);
+  color: white; font-size: 27px; line-height: 1;
+  box-shadow: 0 4px 16px #5548c83d, inset 0 1px 0 #ffffff40;
+  transition: box-shadow 160ms ease, background 160ms ease;
+  z-index: 20;
+}
+.nova-sidebar-toggle:hover { background: linear-gradient(145deg,#8975e5,#5f4dcb); box-shadow: 0 5px 20px #5548c85c; }
+.nova-sidebar-toggle:focus-visible { outline: 3px solid #9b88ed; outline-offset: 3px; }
+.nova-sidebar-toggle::before { content: ""; position: absolute; left: 5px; top: 11px; bottom: 11px; width: 2px; border-radius: 2px; background: #ffffff50; }
+.nova-metric { position: relative; overflow: hidden; border-color: #e3deee; box-shadow: 0 5px 20px #45335a08, inset 0 1px 0 #fff; }
+.nova-metric::after { content: ""; position: absolute; right: -18px; bottom: -26px; width: 120px; height: 100px; border: 1px solid #ffffff90; border-radius: 50%; pointer-events: none; }
+.nova-metric-violet { background: radial-gradient(ellipse at 100% 95%,#d8c8f2,transparent 75%),linear-gradient(135deg,#fff,#f0e9fc); }
+.nova-metric-blue { background: radial-gradient(ellipse at 100% 95%,#c5dedb,transparent 75%),linear-gradient(135deg,#fff,#e8f2ed); }
+.nova-metric-amber { background: radial-gradient(ellipse at 100% 95%,#f0c7b3,transparent 75%),linear-gradient(135deg,#fff,#faeee5); }
+.nova-metric-green { background: radial-gradient(ellipse at 100% 95%,#dcc8dc,transparent 75%),linear-gradient(135deg,#fff,#f6eaf0); }
+.nova-nav-branches { position: relative; margin-left: 12px; border-left: 1px solid #dcd4f2; padding-left: 8px; }
+.nova-nav-link { position: relative; }
+.nova-nav-link::before { content: ""; position: absolute; left: -9px; top: 0; width: 10px; height: 50%; border-left: 1px solid #dcd4f2; border-bottom: 1px solid #dcd4f2; border-radius: 0 0 0 9px; pointer-events: none; }
+.nova-nav-link[aria-current="page"] { background: linear-gradient(105deg,#e8e0ff,#f5f1ff) !important; box-shadow: inset 0 0 0 1px #d9cef4, 0 3px 12px #6550b70b; }
+.nova-nav-link[aria-current="page"]::before { border-color: #8872d4; }
+.nova-main { position: relative; }
+.nova-main > div:first-child { background: rgba(255,255,255,.85); backdrop-filter: blur(12px); }
+@media (min-width: 1024px) {
+  .nova-sidebar { transition: width 220ms ease, padding 220ms ease; }
+  .nova-compact .nova-sidebar { width: 78px; padding-left: 12px; padding-right: 12px; }
+  .nova-compact .nova-brand-text, .nova-compact .nova-group-heading, .nova-compact .nova-nav-label { display: none; }
+  .nova-compact .nova-sidebar > a { padding-left: 4px; padding-right: 4px; }
+  .nova-compact .nova-nav-branches { margin-left: 0; padding-left: 0; border-left: 0; }
+  .nova-compact .nova-nav-link { justify-content: center; padding: 12px; }
+  .nova-compact .nova-nav-link::before { display: none; }
+  .nova-compact .nova-nav-badge { position: absolute; right: -2px; top: 1px; margin: 0; }
+  .nova-compact .nova-nav-group + .nova-nav-group { border-top: 1px solid #e3ddf4; padding-top: 10px; }
+}
+@media (max-width: 1023px) { .nova-sidebar-toggle { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .nova-sidebar { transition: none; }
+  .nova-tech-canvas { display: none; }
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  background: #fafaf9;
+  color: #16181a;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+input,
+select,
+textarea {
+  background: #fff;
+  border: 0.5px solid #e8e8e4;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #16181a;
+  outline: none;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #16181a;
+}
+
+input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #16181a;
+  cursor: pointer;
+  padding: 0;
+}

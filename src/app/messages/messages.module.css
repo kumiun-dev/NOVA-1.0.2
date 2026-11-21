@@ -1,0 +1,16 @@
+.workspace {
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  color: #262438;
+}
+
+.scrollPanel {
+  scrollbar-width: thin;
+  scrollbar-color: #c9c4d9 transparent;
+  scrollbar-gutter: stable;
+}
+
+@media (min-width: 768px) {
+  .scrollPanel {
+    overscroll-behavior-y: contain;
+  }
+}
