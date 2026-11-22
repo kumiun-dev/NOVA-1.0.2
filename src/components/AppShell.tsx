@@ -1,5 +1,5 @@
 "use client";
-import TechBackground from "./TechBackground";
+import { ThemeMenu } from "./Appearance";
 
 import BrandLogo from "./BrandLogo";
 import Link from "next/link";
@@ -33,14 +33,15 @@ const GROUPS = [
   { title: "团队管理", items: [{ href: "/team", label: "员工与权限", icon: "users", teamOnly: true }] },
 ];
 
-type ShellProfile = { displayName: string; role: string; id: string; permissions: ModuleId[]; selfHosted: boolean; authorized?: boolean; ready: boolean };
-type SidebarState = { collapsed: Record<string, boolean>; setCollapsed: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; profile: ShellProfile; setProfile: React.Dispatch<React.SetStateAction<ShellProfile>> };
+type ShellProfile = { avatar?: string; theme?: string; displayName: string; role: string; id: string; permissions: ModuleId[]; selfHosted: boolean; authorized?: boolean; ready: boolean };
+type SidebarState = { collapsed: Record<string, boolean>; setCollapsed: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; profile: ShellProfile; setProfile: React.Dispatch<React.SetStateAction<ShellProfile>>; messageCount: { accountId: string; count: number } | null };
 const SidebarContext = createContext<SidebarState | null>(null);
 export function SidebarNavigationProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => Object.fromEntries(GROUPS.map((group) => [group.title, group.title !== "总览"])));
   const [sidebarStateLoaded, setSidebarStateLoaded] = useState(false);
   const [profile, setProfile] = useState<ShellProfile>({ displayName: "森哥", role: "user", id: "", permissions: [], selfHosted: false, ready: false });
+  const [messageCount, setMessageCount] = useState<SidebarState["messageCount"]>(null);
   useEffect(() => {
     try {
       const saved = localStorage.getItem("nova-sidebar-collapsed-v1");
@@ -60,12 +61,44 @@ export function SidebarNavigationProvider({ children }: { children: ReactNode })
     let active = true;
     fetch("/api/profile").then((r) => r.ok ? r.json() : null).then((d) => {
       if (!active) return;
-      if (d?.id) setProfile({ displayName: d.displayName || "森哥", role: d.role || "user", id: d.id, permissions: Array.isArray(d.permissions) ? d.permissions : [], selfHosted: Boolean(d.selfHosted), authorized: d.authorized, ready: true });
+      if (d?.id) setProfile({ avatar: d.avatar || "", theme: d.theme || "orange", displayName: d.displayName || "森哥", role: d.role || "user", id: d.id, permissions: Array.isArray(d.permissions) ? d.permissions : [], selfHosted: Boolean(d.selfHosted), authorized: d.authorized, ready: true });
       else setProfile((current) => ({ ...current, ready: true }));
     }).catch(() => { if (active) setProfile((current) => ({ ...current, ready: true })); });
     return () => { active = false; };
   }, [pathname, profile.id]);
-  return <SidebarContext.Provider value={{ collapsed, setCollapsed, profile, setProfile }}>{children}</SidebarContext.Provider>;
+  const canReadMessages = profile.role === "admin" || profile.permissions.includes("messages");
+  useEffect(() => {
+    if (!profile.ready || !profile.id || profile.authorized === false || !canReadMessages || pathname === "/login" || pathname === "/register") return;
+    let active = true;
+    let controller: AbortController | undefined;
+    async function refreshCount() {
+      if (document.visibilityState !== "visible") return;
+      controller?.abort();
+      const request = new AbortController();
+      controller = request;
+      try {
+        const response = await fetch("/api/inbox/count", { cache: "no-store", signal: request.signal });
+        if (!active || request.signal.aborted) return;
+        if (response.status === 401 || response.status === 403) { setMessageCount(null); return; }
+        if (!response.ok) return;
+        const data = await response.json();
+        if (active && !request.signal.aborted && Number.isSafeInteger(data.count) && data.count >= 0) setMessageCount({ accountId: profile.id, count: data.count });
+      } catch { /* Preserve the last successful count on transient failures. */ }
+    }
+    void refreshCount();
+    const timer = window.setInterval(() => void refreshCount(), 15_000);
+    const update = () => void refreshCount();
+    window.addEventListener("focus", update);
+    window.addEventListener("nova-inbox-updated", update);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      active = false; controller?.abort(); window.clearInterval(timer);
+      window.removeEventListener("focus", update);
+      window.removeEventListener("nova-inbox-updated", update);
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, [profile.id, profile.ready, profile.authorized, canReadMessages, pathname]);
+  return <SidebarContext.Provider value={{ collapsed, setCollapsed, profile, setProfile, messageCount }}>{children}</SidebarContext.Provider>;
 }
 
 export function NavIcon({ name }: { name: string }) {
@@ -90,7 +123,7 @@ export function NavIcon({ name }: { name: string }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px]" {...common}>{paths[name]}</svg>;
 }
 
-export default function AppShell({ children, pending }: { children: ReactNode; pending?: number }) {
+export default function AppShell({ children }: { children: ReactNode; pending?: number }) {
   const pathname = usePathname();
   const [compact, setCompact] = useState(false);
   useEffect(() => { setCompact(localStorage.getItem("nova-sidebar-compact") === "true"); }, []);
@@ -104,12 +137,15 @@ export default function AppShell({ children, pending }: { children: ReactNode; p
   const accountId = profile.id;
   const accountPermissions = profile.permissions;
   const accountSelfHosted = profile.selfHosted;
+  const pending = sidebar?.messageCount?.accountId === accountId ? sidebar.messageCount.count : 0;
 
   useEffect(() => {
     if (profile.ready && profile.authorized === false && !(profile.id === "owner" && !profile.selfHosted)) router.replace("/login?authorization=required");
     const updateName = (event: Event) => sidebar?.setProfile((current) => ({ ...current, displayName: (event as CustomEvent<string>).detail || "森哥" }));
+    const updateAppearance = (event: Event) => sidebar?.setProfile(current => ({ ...current, ...(event as CustomEvent).detail }));
+    window.addEventListener("nova-appearance", updateAppearance);
     window.addEventListener("nova-account-name", updateName);
-    return () => window.removeEventListener("nova-account-name", updateName);
+    return () => { window.removeEventListener("nova-account-name", updateName); window.removeEventListener("nova-appearance", updateAppearance); };
   }, [profile.ready, profile.authorized, profile.id, profile.selfHosted, router, sidebar?.setProfile]);
 
   async function logout() {
@@ -119,14 +155,13 @@ export default function AppShell({ children, pending }: { children: ReactNode; p
 
   return (
     <div className={`nova-shell min-h-screen lg:flex ${compact ? "nova-compact" : ""}`}>
-      <TechBackground />
-      <aside className="nova-sidebar flex w-full flex-none flex-col border-b border-[#E7E4F1] bg-white px-4 py-4 lg:sticky lg:top-0 lg:h-screen lg:w-[238px] lg:border-b-0 lg:border-r lg:px-3.5 lg:py-5">
-        <button type="button" aria-label={compact ? "展开侧边栏" : "收起侧边栏"} aria-expanded={!compact} className="nova-sidebar-toggle" onClick={() => { const next = !compact; setCompact(next); localStorage.setItem("nova-sidebar-compact", String(next)); }}>{compact ? "›" : "‹"}</button>
+
+      <aside id="nova-sidebar" className="nova-sidebar flex w-full flex-none flex-col border-b border-[#E7E4F1] bg-white px-4 py-4 lg:sticky lg:top-0 lg:h-screen lg:w-[238px] lg:border-b-0 lg:border-r lg:px-3.5 lg:py-5">
         <Link href="/" className="mb-5 flex items-center gap-3 border-b border-[#EFEDF6] px-2 pb-5 lg:mb-5">
           <BrandLogo size={42} />
           <span className="nova-brand-text min-w-0"><span className="block text-[19px] font-bold tracking-[0.14em] text-[#1D2925]">NOVA</span><span className="mt-0.5 block text-[11px] tracking-[0.1em] text-[#87928D]">外贸CRM</span></span>
         </Link>
-        <nav className="grid grid-cols-2 gap-x-2 gap-y-3 text-[13px] sm:grid-cols-3 lg:block lg:flex-1 lg:space-y-4 lg:overflow-y-auto">
+        <nav className="grid grid-cols-2 gap-x-2 gap-y-3 text-[13px] sm:grid-cols-3 lg:block lg:flex-1 lg:space-y-4 lg:overflow-y-auto lg:min-h-0">
           {GROUPS.map((group) => {
             const items = group.items.filter((n: any) => !n.teamOnly || ((accountSelfHosted && accountRole === "admin") || (!accountSelfHosted && accountRole === "customer_admin"))).filter((n: any) => !n.platformOnly || (!accountSelfHosted && accountRole === "admin" && accountId === "owner")).filter((n: any) => !((accountRole === "user" || accountRole === "customer_admin") && moduleForPath(n.href)) || accountPermissions.includes(moduleForPath(n.href)!));
             if (!items.length) return null;
@@ -138,17 +173,23 @@ export default function AppShell({ children, pending }: { children: ReactNode; p
               const active = n.href === "/" ? pathname === "/" : n.href === "/quotes" ? pathname === "/quotes" : pathname === n.href || pathname.startsWith(`${n.href}/`);
               return <Link key={n.href} href={n.href} title={n.label} aria-label={n.label} aria-current={active ? "page" : undefined} className={`nova-nav-link group flex min-w-0 items-center justify-between rounded-[10px] px-3 py-[9px] transition-colors ${active ? "bg-[#F0EEFF] font-semibold text-[#5548C8]" : "text-[#69746F] hover:bg-[#F7F6FC] hover:text-[#25332D]"}`}>
                 <span className="flex min-w-0 items-center gap-2.5"><span className={active ? "text-[#6255D3]" : "text-[#98A19D] group-hover:text-[#64716B]"}><NavIcon name={n.icon}/></span><span className="nova-nav-label truncate">{n.label}</span></span>
-                {n.badge && pending ? <span className="nova-nav-badge ml-2 rounded-full bg-[#C94C42] px-1.5 py-0.5 text-[10px] leading-none text-white">{pending}</span> : null}
+                {n.badge && pending > 0 ? <span aria-label={`${pending} 条待回复消息`} className="nova-nav-badge ml-2 rounded-full bg-[#C94C42] px-1.5 py-0.5 text-[10px] leading-none text-white">{pending}</span> : null}
               </Link>;
             })}</div> : null}
           </section>})}
         </nav>
+        <Link href="/profile" className="nova-sidebar-profile" aria-label={`打开${accountName}的个人资料`} title={accountName}>
+          {profile.avatar ? <img src={profile.avatar} alt="个人头像" className="nova-avatar" /> : <span className="nova-avatar" aria-label="默认头像"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="24" height="24"><circle cx="12" cy="8" r="4"/><path d="M4 22v-2a8 8 0 0 1 16 0v2"/></svg></span>}
+          <span className="nova-profile-label min-w-0"><strong className="block truncate">{accountName}</strong><span className="text-xs text-muted">个人资料与账户</span></span>
+        </Link>
       </aside>
       <main className="nova-main min-w-0 flex-1">
-        <div className="flex h-12 items-center justify-end gap-3 border-b border-[#EFEDF6] bg-white px-5">
-          <button type="button" onClick={() => router.push("/profile")} title="打开个人资料与账户设置" aria-label={`打开${accountName}的个人资料`} className="group inline-flex max-w-[240px] items-center gap-2 rounded-xl border border-[#6958D2] bg-[#F1EEFF] px-3.5 py-2 text-[12px] font-semibold text-[#4E3DB6] shadow-[0_1px_3px_rgba(84,67,180,0.12)] transition-all hover:border-[#5140BF] hover:bg-[#E7E2FF] hover:shadow-[0_3px_10px_rgba(84,67,180,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7565E8]/40"><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4 flex-none"><circle cx="10" cy="6.3" r="3.1" stroke="currentColor" strokeWidth="1.6"/><path d="M3.8 17c.6-3.1 2.8-4.7 6.2-4.7s5.6 1.6 6.2 4.7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg><span className="truncate">{accountName}</span><svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="h-3 w-3 flex-none text-[#7565C9] transition-transform group-hover:translate-x-0.5"><path d="m6 3 5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
-          <button onClick={logout} className="rounded-lg border border-[#E7E4F1] px-3 py-1.5 text-[11px] text-[#69746F] hover:bg-[#F7F6FC] hover:text-[#5548C8]">退出登录</button>
-        </div>
+        <header className="nova-topbar">
+          <button type="button" aria-label={compact ? "展开侧边栏" : "收起侧边栏"} title={compact ? "展开侧边栏" : "收起侧边栏"} aria-controls="nova-sidebar" aria-expanded={!compact} className="nova-sidebar-toggle" onClick={() => { const next = !compact; setCompact(next); localStorage.setItem("nova-sidebar-compact", String(next)); }}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/><path d={compact ? "m13 9 3 3-3 3" : "m16 9-3 3 3 3"}/></svg>
+          </button>
+          <ThemeMenu accountId={accountId} initial={profile.theme} />
+        </header>
         {children}
       </main>
     </div>

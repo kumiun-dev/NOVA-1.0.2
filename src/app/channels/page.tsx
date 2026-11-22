@@ -94,7 +94,7 @@ type Connections = {
 };
 const EMPTY_CONNECTIONS: Connections = { configured: { meta: false, gmail: false, zernio: false }, facebook: [], instagram: [], linkedin: [], gmail: [], enterprise: [] };
 const ADD_LABEL = { whatsapp: "添加 WhatsApp", facebook: "添加 Facebook 主页", instagram: "添加 Instagram 账号", linkedin: "添加 LinkedIn 账号", gmail: "添加 Gmail", enterprise: "添加企业邮箱" };
-const CARD = "flex min-h-[245px] min-w-0 flex-col rounded-2xl border border-line bg-white p-5 shadow-sm";
+const CARD = "nova-channel-card flex min-w-0 flex-col rounded-2xl border border-line bg-white p-5";
 const CHIP = "flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px]";
 const ADD_BUTTON = "mt-4 inline-flex w-full justify-center rounded-xl border border-[#D9D5FA] bg-[#F7F6FF] px-3 py-2.5 text-[13px] font-medium text-[#5548C8] hover:bg-[#EFEDFF] disabled:opacity-50";
 const ROW_BUTTON = "rounded-md border border-line px-2.5 py-1.5 text-[11px] font-medium text-muted hover:text-ink disabled:opacity-50";
@@ -113,7 +113,7 @@ function Card({ title, icon, count, anchor, children }: { title: string; icon: R
 }
 
 function AccountList({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
-  if (!count) return null;
+  if (!count) return <p className="nova-channel-empty">尚未连接账号</p>;
   return (
     <ul aria-label={`${label}账号列表`} tabIndex={count > 2 ? 0 : undefined}
       className="max-h-[11.25rem] space-y-2 overflow-y-auto overscroll-y-contain rounded-xl pr-1 [scrollbar-width:thin] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#6255D3]">

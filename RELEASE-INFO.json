@@ -1,10 +1,10 @@
 {
   "version": "1.0.2",
-  "builtAt": "2026-11-21T13:24:08.7759252Z",
-  "sourceCommit": "78ea42f75f07e3aa1a983493595501ca50234d23",
+  "edition": "customer-cut",
   "sharedServices": [
     "whatsapp-gateway",
     "shared-catalog-search"
   ],
-  "edition": "customer-cut"
+  "sourceCommit": "147e1f1fc301df0b02f4a63dc54d33ece8b014fc",
+  "builtAt": "2026-11-22T15:11:25.4539948Z"
 }

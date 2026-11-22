@@ -279,6 +279,7 @@ export default function MessagesPage() {
       .then((response) => { if (response.ok) void load(); }).catch(() => {});
   }, [unreadId, selectedKeyForRead, load]);
   const pendingCount = items.filter((item) => item.state !== "已发送").length;
+  useEffect(() => { window.dispatchEvent(new Event("nova-inbox-updated")); }, [pendingCount]);
   const timeline = useMemo(() => {
     const events = [...(selected?.items || [])].reverse().flatMap((item) => [
       { id: `message-${item.id}`, item, body: item.body, date: item.created_at, outgoing: item.direction === "outgoing", mode: "同步发送" },
@@ -409,7 +410,7 @@ export default function MessagesPage() {
 
   return (
     <AppShell pending={pendingCount}>
-      <div className={`${styles.workspace} flex min-h-0 flex-col bg-[#F4F2F8] lg:h-[calc(100dvh-3rem)] lg:min-h-[36rem]`}>
+      <div className={`${styles.workspace} flex min-h-0 flex-col bg-[#F4F2F8] lg:h-[calc(100dvh-4rem)] lg:min-h-[36rem]`}>
         <header className="shrink-0 px-4 pb-3 pt-5 sm:px-6 lg:px-7">
           <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
             <h1 className="text-[24px] font-semibold tracking-tight text-[#28243A]">消息工作台</h1>

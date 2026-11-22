@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getRequestUser, isValidEmail, makePassword, verifyPassword, issueSession, normalizeEmail, secureSessionCookies } from "@/lib/auth";
 import { systemDb } from "@/lib/db";
 import { getLicense, getTenantLicense, isSelfHosted } from "@/lib/license";
+import { validTheme } from "@/lib/appearance";
+
+function appearance(id: string): {theme: string; avatar: string} {
+  try { return {theme: "orange", avatar: "", ...JSON.parse((systemDb.prepare("SELECT value FROM auth_meta WHERE key=?").get(`appearance:${id}`) as {value: string} | undefined)?.value || "{}")}; }
+  catch { return {theme: "orange", avatar: ""}; }
+}
 
 export async function GET(req: NextRequest) {
   const user = await getRequestUser(req);
@@ -14,7 +20,7 @@ export async function GET(req: NextRequest) {
   const modules = selfHosted ? (license.valid ? license.license.modules : []) : tenantLicense?.modules || [];
   if (user.role === "customer_admin") permissions = modules;
   const authorized = selfHosted ? license.valid : user.id === "owner" || Boolean(tenantLicense?.authorized);
-  return NextResponse.json({ id: user.id, displayName: user.display_name, email: user.email, role: user.role, permissions, selfHosted, authorized, license: selfHosted && license.valid ? { expiresAt: license.license.expiresAt, maxEmployees: license.license.maxEmployees, modules } : tenantLicense ? { expiresAt: tenantLicense.expiresAt, maxEmployees: tenantLicense.maxEmployees, modules } : null });
+  return NextResponse.json({ ...appearance(user.id), id: user.id, displayName: user.display_name, email: user.email, role: user.role, permissions, selfHosted, authorized, license: selfHosted && license.valid ? { expiresAt: license.license.expiresAt, maxEmployees: license.license.maxEmployees, modules } : tenantLicense ? { expiresAt: tenantLicense.expiresAt, maxEmployees: tenantLicense.maxEmployees, modules } : null }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -22,7 +28,28 @@ export async function PATCH(req: NextRequest) {
   if (!license.valid) return NextResponse.json({ error: license.reason }, { status: 403 });
   const user = await getRequestUser(req);
   if (!user) return NextResponse.json({ error: "请重新登录" }, { status: 401 });
+  if (Number(req.headers.get("content-length") || 0) > 300000) return NextResponse.json({error: "图片过大"}, {status: 413});
   const body = await req.json().catch(() => ({}));
+  if (body.action === "appearance") {
+    const next = appearance(user.id);
+    if (body.theme !== undefined) {
+      if (!validTheme(body.theme)) return NextResponse.json({error: "无效主题"}, {status: 400});
+      next.theme = body.theme;
+    }
+    if (body.avatar !== undefined) {
+      if (typeof body.avatar !== "string" || body.avatar.length > 250000) return NextResponse.json({error: "无效头像"}, {status: 400});
+      if (body.avatar) {
+        const match = body.avatar.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
+        if (!match) return NextResponse.json({error: "不支持的图片"}, {status: 400});
+        const bytes = Buffer.from(match[2], "base64");
+        const valid = match[1] === "png" ? bytes.subarray(0,8).toString("hex") === "89504e470d0a1a0a" : match[1] === "jpeg" ? bytes.subarray(0,3).toString("hex") === "ffd8ff" : bytes.toString("ascii",0,4) === "RIFF" && bytes.toString("ascii",8,12) === "WEBP";
+        if (!valid) return NextResponse.json({error: "图片格式不匹配"}, {status: 400});
+      }
+      next.avatar = body.avatar;
+    }
+    systemDb.prepare("INSERT INTO auth_meta (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(`appearance:${user.id}`, JSON.stringify(next));
+    return NextResponse.json({ok: true});
+  }
   const displayName = String(body.displayName || "").trim().slice(0, 40);
   const email = normalizeEmail(String(body.email || ""));
   const currentPassword = String(body.currentPassword || "");

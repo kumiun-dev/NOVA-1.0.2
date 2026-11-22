@@ -106,6 +106,7 @@ export default function WorkbenchPage() {
       }, "发送失败");
       setItems((current) => current.filter((entry) => entry.id !== item.id));
       setSendMessage(data.message || "回复已发送");
+      window.dispatchEvent(new Event("nova-inbox-updated"));
       dialog.current?.close();
       queueHeading.current?.focus();
       reloadQueue((value) => value + 1);

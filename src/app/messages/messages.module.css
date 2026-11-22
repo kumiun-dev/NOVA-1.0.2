@@ -1,11 +1,11 @@
 .workspace {
   font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  color: #262438;
+  color: var(--ink);
 }
 
 .scrollPanel {
   scrollbar-width: thin;
-  scrollbar-color: #c9c4d9 transparent;
+  scrollbar-color: var(--line) transparent;
   scrollbar-gutter: stable;
 }
 
