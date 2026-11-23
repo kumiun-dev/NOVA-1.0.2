@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   try {
     if (isSelfHosted()) {
-      const user = registerSelfHostedAdmin({ email: String(body.email || ""), password: String(body.password || ""), displayName: String(body.displayName || ""), authorizationCode: String(body.authorizationCode || "") });
+      const user = registerSelfHostedAdmin({ email: String(body.email || ""), password: String(body.password || ""), displayName: String(body.displayName || "") });
       const session = issueSession(user);
       const response = NextResponse.json({ ok: true, displayName: user.display_name });
       response.cookies.set("nova_session", session.token, { path: "/", httpOnly: true, sameSite: "lax", secure: secureSessionCookies(), maxAge: session.maxAge });

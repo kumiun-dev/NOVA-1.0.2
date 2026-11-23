@@ -9,7 +9,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [authorizationCode, setAuthorizationCode] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [selfHosted, setSelfHosted] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
@@ -23,7 +22,7 @@ export default function RegisterPage() {
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(""); setSuccess("");
     try {
-      const response = await fetch("/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(selfHosted ? { email, password, displayName, authorizationCode } : { email, password, authorizationCode }) });
+      const response = await fetch("/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password, displayName }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "注册失败");
       router.push("/"); router.refresh();
@@ -37,12 +36,10 @@ export default function RegisterPage() {
       {selfHosted ? <><label htmlFor="register-name" className="mb-1 block text-[12px] text-muted">管理员称呼（可选）</label><input id="register-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="mb-3 w-full" placeholder="你的称呼" autoComplete="name"/></> : null}
       <label htmlFor="register-email" className="mb-1 block text-[12px] text-muted">邮箱</label><input id="register-email" required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mb-3 w-full" placeholder="you@example.com" autoComplete="email"/>
       <label htmlFor="register-password" className="mb-1 block text-[12px] text-muted">密码</label><input id="register-password" required minLength={8} type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mb-3 w-full" placeholder="至少 8 位" autoComplete="new-password"/>
-      <label htmlFor="register-auth-code" className="mb-1 block text-[12px] text-muted">授权码</label><textarea id="register-auth-code" required value={authorizationCode} onChange={(e) => setAuthorizationCode(e.target.value.trim())} className="min-h-20 w-full font-mono text-[10px]" placeholder="粘贴 NOVA 管理员提供的授权码" autoComplete="off"/>
       {error ? <p role="alert" className="mt-3 text-[12px] text-[#A32D2D]">{error}</p> : null}
       {success ? <p role="status" className="mt-3 rounded-lg border border-[#CBE8D5] bg-[#EFF9F2] p-3 text-[12px] text-[#276A43]">{success}</p> : null}
       <button disabled={busy} className="mt-5 w-full rounded-md bg-[#5548C8] py-2.5 text-[13px] font-medium text-white disabled:opacity-60">{busy ? "创建中…" : "创建账户"}</button>
     </form> : modeLoaded && selfHosted ? <p className="rounded-lg border border-[#E8D1A6] bg-[#FFF8E8] p-3 text-[12px] text-[#72531B]">此服务器已完成管理员注册。如需使用，请返回登录；员工账号由客户管理员创建。</p> : modeLoaded ? <div className="rounded-lg border border-[#DCD6FA] bg-[#F8F6FF] p-3 text-[12px] leading-6 text-[#5E5878]">托管客户账户由 NOVA 管理员在客户管理页创建。请联系管理员获取登录邮箱和密码，然后直接登录。</div> : null}
-    {modeLoaded && selfHosted && setupRequired ? <p className="mt-4 text-center text-[11px] text-faint">授权码由 NOVA 管理员签发，只能用于对应服务器域名。</p> : null}
     <p className="mt-2 text-center text-[11px] text-muted">已有账户？ <Link href="/login" className="font-medium text-[#5548C8] hover:underline">返回登录</Link></p>
   </div></div>;
 }

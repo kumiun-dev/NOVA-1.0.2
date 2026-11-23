@@ -1,7 +1,7 @@
 import { createHmac, randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { deleteTenantDatabase, runWithTenantDatabase, systemDb } from "@/lib/db";
-import { getLicense, getTenantLicense, isModuleLicensed, isSelfHosted, verifyLicenseToken } from "@/lib/license";
+import { getLicense, getTenantLicense, isModuleLicensed, isSelfHosted } from "@/lib/license";
 import { moduleForPath, normalizePermissions } from "@/lib/permissions";
 
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
@@ -183,21 +183,19 @@ export function userById(id: string) {
   return systemDb.prepare("SELECT * FROM auth_users WHERE id=? AND active=1").get(id) as AccountUser | undefined;
 }
 
-export function registerSelfHostedAdmin(input: { email: string; password: string; displayName?: string; authorizationCode: string }) {
-  if (!isSelfHosted()) throw new Error("授权码注册只适用于客户自有服务器版");
+export function registerSelfHostedAdmin(input: { email: string; password: string; displayName?: string; authorizationCode?: string }) {
+  if (!isSelfHosted()) throw new Error("此操作只适用于客户服务器");
   const email = normalizeEmail(input.email);
   const displayName = String(input.displayName || email.split("@")[0] || "NOVA 管理员").trim().slice(0, 40);
   if (!isValidEmail(email)) throw new Error("请输入有效邮箱地址");
   if (input.password.length < 8) throw new Error("密码至少需要 8 位");
-  const checked = verifyLicenseToken(input.authorizationCode, String(process.env.NOVA_DOMAIN || ""));
-  if (!checked.valid) throw new Error(checked.reason);
+
   if (systemDb.prepare("SELECT 1 FROM auth_users WHERE role='admin' LIMIT 1").get()) throw new Error("此服务器已完成管理员注册；员工账号请由管理员在团队管理中创建");
   if (systemDb.prepare("SELECT 1 FROM auth_users WHERE email=?").get(email)) throw new Error("这个邮箱已注册");
   const { salt, hash } = makePassword(input.password);
   const now = new Date().toISOString();
   const transaction = systemDb.transaction(() => {
     if (systemDb.prepare("SELECT 1 FROM auth_users WHERE role='admin' LIMIT 1").get()) throw new Error("此服务器已完成管理员注册");
-    systemDb.prepare("INSERT INTO settings (key,value) VALUES ('selfhost_license_token',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(input.authorizationCode.trim());
     systemDb.prepare("INSERT INTO auth_users (id,email,display_name,role,password_salt,password_hash,created_at) VALUES ('owner',?,?, 'admin',?,?,?)")
       .run(email, displayName || "NOVA 管理员", salt, hash, now);
     systemDb.prepare("INSERT OR IGNORE INTO shared_quotes(token,account_id) SELECT token,'owner' FROM quotes WHERE token!=''").run();
@@ -223,7 +221,7 @@ export function createEmployee(input: { email: string; password: string; display
   const denied = permissions.filter((module) => !permitted.has("*") && !permitted.has(module));
   if (denied.length) throw new Error("当前授权未包含所选模块");
   const employeeCount = (systemDb.prepare("SELECT COUNT(*) c FROM auth_users WHERE role='user' AND tenant_id=? AND active=1").get(tenantId) as { c: number }).c;
-  if (employeeCount >= license.maxEmployees) throw new Error("员工账号数量已达到授权上限，请联系 NOVA 管理员扩容");
+
   const { salt, hash } = makePassword(input.password);
   const id = randomUUID();
   systemDb.prepare("INSERT INTO auth_users (id,email,display_name,role,tenant_id,password_salt,password_hash,permissions,created_at) VALUES (?,?,?,'user',?,?,?,?,?)")

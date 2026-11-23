@@ -67,7 +67,7 @@ export default function LoginPage() {
             {busy ? "登录中…" : "进入工作台"}
           </button>
         </form>
-        {!selfHosted ? <p className="mt-5 text-center text-[11px] text-faint">新客户请联系 NOVA 管理员创建账户；收到邮箱和密码后直接登录。</p> : setupRequired ? <p className="mt-5 text-center text-[11px] text-muted">首次使用？ <Link className="font-medium text-[#5548C8] hover:underline" href="/register">使用授权码创建管理员</Link></p> : <p className="mt-5 text-center text-[11px] text-faint">员工账号由客户管理员创建；授权或登录问题请联系管理员。</p>}
+        {!selfHosted ? <p className="mt-5 text-center text-[11px] text-faint">新客户请联系 NOVA 管理员创建账户；收到邮箱和密码后直接登录。</p> : setupRequired ? <p className="mt-5 text-center text-[11px] text-muted">首次使用？ <Link className="font-medium text-[#5548C8] hover:underline" href="/register">创建管理员</Link></p> : <p className="mt-5 text-center text-[11px] text-faint">员工账号由本公司管理员创建。</p>}
       </div>
     </div>
   );

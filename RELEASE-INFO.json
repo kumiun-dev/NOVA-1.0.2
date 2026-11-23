@@ -1,10 +1,12 @@
 {
-  "version": "1.0.2",
-  "edition": "customer-cut",
   "sharedServices": [
     "whatsapp-gateway",
     "shared-catalog-search"
   ],
+  "requiresOwnerLicense": false,
+  "edition": "customer-cut",
   "sourceCommit": "147e1f1fc301df0b02f4a63dc54d33ece8b014fc",
-  "builtAt": "2026-11-22T15:11:25.4539948Z"
+  "builtAt": "2026-11-23T01:42:01.6823899Z",
+  "sharedServiceProtocol": "self-service-ed25519-v1",
+  "version": "1.0.2"
 }

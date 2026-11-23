@@ -23,4 +23,4 @@ mkdir -p backups
 if [[ "$EUID" -eq 0 ]]; then chown 1000:1000 backups; fi
 chmod 700 backups
 docker compose up -d --build nova
-echo "Configure HTTPS reverse proxy to 127.0.0.1:3000, then open /register with your NOVA domain license."
+echo "Configure HTTPS reverse proxy to 127.0.0.1:3000, then open /register and create your first administrator (no authorization code required)."

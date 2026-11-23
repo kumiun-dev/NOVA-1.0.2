@@ -111,3 +111,7 @@ Next.js 15、React 19、TypeScript、SQLite、Docker Compose 和 Node.js 22。
 本项目采用 [MIT License](LICENSE)，允许复制、修改、部署、再分发及商用；再分发时须保留版权声明和许可证文本。第三方依赖、字体、图标、图片和外部服务仍遵守各自的许可证或服务条款。
 
 NOVA 名称及 Logo 作为品牌素材使用。版权方：KUMIiun · [manshuang920@gmail.com](mailto:manshuang920@gmail.com)
+
+
+## 切割版免授权更新（2026-11-23）
+部署后直接创建管理员并登录，无需主站授权码、域名许可、审批或续期。员工由公司管理员创建。仅共享采集库获客与 WhatsApp 扫码使用主站服务，其余社媒、邮箱、AI 模型自行配置。不含平台管理、主站密钥或原始采集库。主站需部署兼容自助身份验签的新版共享接口。

@@ -64,7 +64,6 @@ export default function ProfilePage() {
       </form>}
     </section>
 
-    {role === "admin" && selfHosted ? <section className="mt-5 rounded-2xl border border-[#E8E5F2] bg-white p-5 shadow-[0_5px_18px_rgba(50,43,92,0.05)] sm:p-6"><h2 className="text-[15px] font-semibold text-[#252333]">客户服务器授权</h2><p className="mt-1 text-[11px] text-[#89909F]">本实例由 NOVA 管理员授权。授权状态与续期由服务提供方管理。</p><p className="mt-3 text-[12px] text-[#5548C8]">{licenseExpires ? `有效期至 ${dateText(licenseExpires)}` : "授权有效"}</p><a href="/team" className="mt-4 inline-flex rounded-lg bg-[#5B4BC4] px-4 py-2.5 text-[12px] font-semibold text-white">管理员工与模块权限</a></section> : null}
     <section className="nova-profile-card"><h2>登录管理</h2><p className="my-3 text-sm text-muted">退出当前设备上的 NOVA 登录。</p><button type="button" onClick={async () => { const response = await fetch("/api/logout", {method:"POST"}); if (response.ok) window.location.assign("/login"); else setStatus("退出失败，请重试"); }} className="rounded-lg border px-4 py-2">退出登录</button></section>
   </div></AppShell>;
 }

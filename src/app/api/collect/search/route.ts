@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { withAuth } from "@/lib/auth";
-import { getStoredLicenseToken, isSelfHosted } from "@/lib/license";
+import { cutServiceFetch } from "@/lib/cut-service-client";
 import type { LeadCandidate } from "@/lib/sources/types";
 
 export const runtime = "nodejs";
@@ -21,15 +21,8 @@ export const POST = withAuth(async function POST(req: NextRequest) {
       try {
         let rows: any[];
         {
-          const token = getStoredLicenseToken();
           const endpoint = String(process.env.NOVA_SHARED_CATALOG_URL || "https://svr.admarket.cn/api/shared-catalog/search").trim();
-          if (!token) throw new Error("当前服务器授权信息不可用，请联系 NOVA 管理员");
-          const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ keyword, country, industry, limit }),
-            signal: AbortSignal.timeout(25_000),
-          });
+          const response = await cutServiceFetch(endpoint, JSON.stringify({ keyword, country, industry, limit }));
           const data = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(String(data.error || "共享采购商资料暂时无法连接"));
           rows = Array.isArray(data.leads) ? data.leads : [];
