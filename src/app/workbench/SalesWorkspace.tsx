@@ -7,15 +7,15 @@ import { SALES_STAGES } from "@/lib/stages";
 import { localDay, SALES_PERIODS, type SalesLead, type SalesPeriod, type SalesSnapshot } from "@/lib/sales-overview";
 
 const PHASES = [
-  { label: "新线索", funnel: "全部线索", statuses: ["线索"], color: "#6267CA", tint: "#EEEDFF" },
-  { label: "沟通中", funnel: "已沟通", statuses: ["已联系", "谈判中"], color: "#2778AB", tint: "#E8F5FC" },
-  { label: "已报价", funnel: "已报价", statuses: ["已报价"], color: "#7652C8", tint: "#F3EAFC" },
-  { label: "样品中", funnel: "样品中及之后", statuses: ["样品中"], color: "#A26325", tint: "#FFF1E0" },
-  { label: "成交", funnel: "成交", statuses: ["成交"], color: "#237357", tint: "#E8F6EF" },
+  { label: "新线索", funnel: "全部线索", statuses: ["线索"], color: "var(--accent)", tint: "var(--tint)" },
+  { label: "沟通中", funnel: "已沟通", statuses: ["已联系", "谈判中"], color: "var(--accent)", tint: "var(--tint)" },
+  { label: "已报价", funnel: "已报价", statuses: ["已报价"], color: "var(--accent)", tint: "var(--tint)" },
+  { label: "样品中", funnel: "样品中及之后", statuses: ["样品中"], color: "var(--accent)", tint: "var(--tint)" },
+  { label: "成交", funnel: "成交", statuses: ["成交"], color: "var(--accent)", tint: "var(--tint)" },
 ];
 const FILTERS = { all: "全部", intent: "高意向", late: "超期" } as const;
 const CARDS_PER_COLUMN = 3;
-const FUNNEL_COLORS = ["#8458E1", "#754BCC", "#673CB8", "#5A329F", "#4A2886"];
+const FUNNEL_COLORS = Array<string>(5).fill("var(--accent-fill)");
 type Filter = keyof typeof FILTERS;
 type TrendMetric = "inquiries" | "leads";
 const panel = "min-w-0 rounded-2xl border border-line bg-white p-4 shadow-sm sm:p-5";
@@ -48,12 +48,12 @@ function Trend({ snapshot, metric }: { snapshot: SalesSnapshot; metric: TrendMet
   return <>
     <p className="mb-1 text-xs text-muted">合计 <strong className="text-lg text-ink">{total}</strong> 条</p>
     <svg viewBox="0 0 300 112" role="img" aria-label={`${metric === "inquiries" ? "新来信" : "新增线索"}趋势，合计 ${total} 条`} className="h-[122px] w-full">
-      <path d="M0 13h300M0 43h300M0 73h300M0 103h300" stroke="#ECE8F5" fill="none" />
+      <path d="M0 13h300M0 43h300M0 73h300M0 103h300" stroke="var(--line)" fill="none" />
       {points.length > 1 ? <>
-        <polygon points={`${points[0].x},103 ${coords} ${points.at(-1)!.x},103`} fill="#EFE9FB" />
-        <polyline points={coords} fill="none" stroke="#7356D6" strokeWidth="2.4" strokeLinejoin="round" />
+        <polygon points={`${points[0].x},103 ${coords} ${points.at(-1)!.x},103`} fill="var(--tint)" />
+        <polyline points={coords} fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinejoin="round" />
       </> : null}
-      {points.map((point) => <circle key={point.date} cx={point.x} cy={point.y} r={records.length > 14 ? 2 : 3.5} fill="#7356D6"><title>{point.date} · {point[metric]} 条</title></circle>)}
+      {points.map((point) => <circle key={point.date} cx={point.x} cy={point.y} r={records.length > 14 ? 2 : 3.5} fill="var(--accent)"><title>{point.date} · {point[metric]} 条</title></circle>)}
     </svg>
     <div className="flex justify-between text-[11px] tabular-nums text-muted"><span>{snapshot.from}</span>{snapshot.from !== snapshot.to ? <span>{snapshot.to}</span> : null}</div>
   </>;
@@ -68,10 +68,10 @@ function Funnel({ leads }: { leads: SalesLead[] }) {
         const value = index === 0 ? total : counts.slice(index).reduce((sum, count) => sum + count, 0);
         const percent = total ? Math.round(value / total * 100) : 0;
         return <li key={phase.label} className="grid grid-cols-[minmax(0,1fr)_3rem] items-center gap-2">
-          <div className={`relative mx-auto flex min-h-8 max-w-full items-center justify-between gap-1 px-[10%] text-[11px] font-semibold ${value ? "text-white" : "text-[#634D91]"}`}
+          <div data-funnel-fill className={`relative mx-auto flex min-h-8 max-w-full items-center justify-between gap-1 px-[10%] text-[11px] font-semibold ${value ? "text-white" : "text-[#634D91]"}`}
             style={{
               width: `max(6.25rem, ${100 - index * 10}%)`,
-              background: value ? `linear-gradient(120deg,${FUNNEL_COLORS[index]},${FUNNEL_COLORS[Math.min(index + 1, FUNNEL_COLORS.length - 1)]})` : "#F1EBF9",
+              background: value ? `linear-gradient(120deg,${FUNNEL_COLORS[index]},${FUNNEL_COLORS[Math.min(index + 1, FUNNEL_COLORS.length - 1)]})` : "var(--soft)",
               clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)",
             }}>
             <span className="min-w-0 leading-tight">{phase.funnel}</span>
@@ -98,7 +98,7 @@ function Countries({ leads }: { leads: SalesLead[] }) {
   if (rest) top.push(["其他地区", rest]);
   let offset = 0;
   const slices = top.map(([name, count], index) => {
-    const color = ["#7253D0", "#5287D4", "#36A08A", "#D69A49", "#AB6DAA", "#C9C2DB"][index];
+    const color = `color-mix(in srgb, var(--accent) ${100-index*12}%, var(--soft))`;
     const from = offset / leads.length * 100;
     offset += count;
     return { name, count, color, gradient: `${color} ${from}% ${offset / leads.length * 100}%` };

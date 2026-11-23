@@ -12,7 +12,7 @@ function Dots({ n }: { n: number }) {
         <i
           key={i}
           className="block h-[5px] w-[5px] rounded-full"
-          style={{ background: i < n ? "#6756D8" : "transparent", border: i < n ? "none" : "0.5px solid #C9C9C2" }}
+          style={{ background: i < n ? "var(--accent)" : "transparent", border: i < n ? "none" : "0.5px solid #C9C9C2" }}
         />
       ))}
     </span>
@@ -21,7 +21,7 @@ function Dots({ n }: { n: number }) {
 
 function Mini({ label, value, missing }: { label: string; value: string; missing?: boolean }) {
   return (
-    <div className="min-w-0 rounded-lg bg-white/75 px-2.5 py-2 ring-1 ring-[#EAE7F8]">
+    <div className="min-w-0 rounded-lg bg-white/75 px-2.5 py-2 ring-1 ring-[var(--line)]">
       <div className="mb-0.5 text-[9px] font-medium tracking-wide text-[#8179AA]">{label}</div>
       <div className={`truncate text-[11px] ${missing ? "text-[#B5B8B8]" : "text-ink"}`} title={missing ? undefined : value}>{missing ? "未获取" : value}</div>
     </div>
@@ -256,21 +256,21 @@ export default function DashboardPage() {
               const isSel = selected.has(l.id);
               const contact = l.name ? `${l.name}${l.position ? " · " + l.position : ""}` : l.position;
               return (
-              <div key={l.id} className={`group relative flex min-h-[320px] flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-200 ${isSel ? "border-[#7565E8] shadow-[0_10px_28px_rgba(103,86,216,0.18)] ring-2 ring-[#7565E8]/15" : "border-[#E8E5F1] shadow-[0_3px_10px_rgba(49,42,93,0.05)] hover:-translate-y-1 hover:border-[#C9C1F3] hover:shadow-[0_14px_30px_rgba(49,42,93,0.12)]"}`}>
-                  <div className="h-1.5 bg-gradient-to-r from-[#5445C0] via-[#7969E7] to-[#B1A6FF]" />
+              <div key={l.id} className={`group relative flex min-h-[320px] flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-200 ${isSel ? "border-[var(--accent)] shadow-[0_10px_28px_color-mix(in srgb,var(--accent) 18%,transparent)] ring-2 ring-[var(--accent)]/15" : "border-[#E8E5F1] shadow-[0_3px_10px_rgba(49,42,93,0.05)] hover:-translate-y-1 hover:border-[var(--accent)] hover:shadow-[0_14px_30px_rgba(49,42,93,0.12)]"}`}>
+                  <div className="nova-acquisition-stripe h-1.5" />
                   <div className="px-3 pb-3 pt-3">
                     <div className="flex items-start gap-2.5">
-                      <input type="checkbox" aria-label={`选择${l.company}`} className="mt-1 flex-none accent-[#6756D8]" checked={isSel} onChange={() => toggle(l.id)} />
+                      <input type="checkbox" aria-label={`选择${l.company}`} className="mt-1 flex-none accent-[var(--accent)]" checked={isSel} onChange={() => toggle(l.id)} />
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                          {l.country ? <span className="rounded-full bg-[#F1EFFF] px-2 py-0.5 text-[9px] font-medium text-[#5D4EC5]">{l.country}</span> : null}
-                          {(l as any).inCustomers ? <span className="rounded-full bg-[#EAF6F0] px-2 py-0.5 text-[9px] font-medium text-[#28744E]">客户库已有</span> : <span className="rounded-full bg-[#F5F3FF] px-2 py-0.5 text-[9px] font-medium text-[#7565C9]">待确认</span>}
+                          {l.country ? <span className="rounded-full bg-[var(--soft)] px-2 py-0.5 text-[9px] font-medium text-[var(--accent)]">{l.country}</span> : null}
+                          {(l as any).inCustomers ? <span className="rounded-full bg-[#EAF6F0] px-2 py-0.5 text-[9px] font-medium text-[#28744E]">客户库已有</span> : <span className="rounded-full bg-[var(--soft)] px-2 py-0.5 text-[9px] font-medium text-[var(--accent)]">待确认</span>}
                         </div>
                         <h3 className="line-clamp-2 text-[14px] font-semibold leading-snug text-ink" title={l.company}>{l.company}</h3>
                       </div>
-                      <div className="flex flex-none flex-col items-end gap-1 rounded-xl bg-[#F6F4FF] px-2.5 py-1.5">
+                      <div className="flex flex-none flex-col items-end gap-1 rounded-xl bg-[var(--soft)] px-2.5 py-1.5">
                         <span className="text-[8px] font-medium text-[#8179AA]">资料完整度</span>
-                        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5748C3]"><Dots n={n} />{n}/3</span>
+                        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--accent)]"><Dots n={n} />{n}/3</span>
                       </div>
                     </div>
                     <div className="mt-2.5 flex min-h-7 flex-wrap items-center gap-1.5 border-b border-[#EFEDF6] pb-2.5">
@@ -286,9 +286,9 @@ export default function DashboardPage() {
                       {l.address ? <div className="col-span-2"><Mini label="地址" value={l.address} /></div> : null}
                     </div>
                   </div>
-                  <div className="mt-auto flex items-center gap-2 border-t border-[#EFEDF6] bg-[#FBFAFF] px-3 py-2.5">
+                  <div className="mt-auto flex items-center gap-2 border-t border-[#EFEDF6] bg-[var(--soft)] px-3 py-2.5">
                     <span className="flex-1 text-[9px] text-faint">{(l as any).inCustomers ? "已保存到客户管理" : "确认后加入客户管理"}</span>
-                    <button disabled={busy || Boolean((l as any).inCustomers)} onClick={() => addCandidates([l.id])} className={`rounded-lg px-3 py-2 text-[10px] font-semibold transition-colors ${((l as any).inCustomers) ? "cursor-default border border-[#DCECE3] bg-[#EAF6F0] text-[#28744E]" : "bg-[#6756D8] text-white hover:bg-[#5545C4] disabled:opacity-60"}`}>{(l as any).inCustomers ? "已添加" : "＋ 添加客户"}</button>
+                    <button disabled={busy || Boolean((l as any).inCustomers)} onClick={() => addCandidates([l.id])} className={`rounded-lg px-3 py-2 text-[10px] font-semibold transition-colors ${((l as any).inCustomers) ? "cursor-default border border-[#DCECE3] bg-[#EAF6F0] text-[#28744E]" : "bg-[var(--accent)] text-white hover:bg-[#5545C4] disabled:opacity-60"}`}>{(l as any).inCustomers ? "已添加" : "＋ 添加客户"}</button>
                   </div>
                 </div>
               );

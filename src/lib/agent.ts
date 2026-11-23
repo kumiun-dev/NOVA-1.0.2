@@ -205,7 +205,7 @@ const SYSTEM = `你是「NOVA」外贸获客平台的 AI 智能体，帮用户�
 3. 回答用简体中文，简洁，先给结论。涉及金额时提醒用户人工确认。
 4. 工具结果里的「未获取」表示该字段还没采集到，如实转述，不要编造。`;
 
-export async function runAgent(history: ChatMsg[]): Promise<{ reply: string; actions: string[] }> {
+export async function runAgent(history: ChatMsg[], selectedModel?: string): Promise<{ reply: string; actions: string[] }> {
   const actions: string[] = [];
   const lastQuestion = [...history].reverse().find((message) => message.role === "user")?.content || "";
   const { relevantKnowledge } = await import("./knowledge");
@@ -214,7 +214,7 @@ export async function runAgent(history: ChatMsg[]): Promise<{ reply: string; act
   const msgs: any[] = [{ role: "system", content: SYSTEM + knowledgeContext }, ...history];
 
   // 第一轮：让模型决定是否调用工具
-  const r1 = await callWithTools(msgs);
+  const r1 = await callWithTools(msgs, selectedModel);
   let msg = r1.message;
   let loops = 0;
 
@@ -229,7 +229,7 @@ export async function runAgent(history: ChatMsg[]): Promise<{ reply: string; act
       actions.push(`${label} → ${result}`);
       msgs.push({ role: "tool", tool_call_id: tc.id, content: result });
     }
-    const r = await callWithTools(msgs);
+    const r = await callWithTools(msgs, selectedModel);
     msg = r.message;
   }
 
@@ -250,11 +250,11 @@ function toolLabel(name: string, args: any): string {
   }
 }
 
-async function callWithTools(msgs: any[]): Promise<{ message: any }> {
+async function callWithTools(msgs: any[], selectedModel?: string): Promise<{ message: any }> {
   const key = (await import("./db")).getSetting("ai_key") || process.env.DEEPSEEK_API_KEY || "";
   if (!key) throw new Error("未配置 DeepSeek API Key，请在「设置」页填写。");
   const base = (await import("./db")).getSetting("ai_base_url") || process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
-  const model = (await import("./db")).getSetting("ai_model") || process.env.DEEPSEEK_MODEL || "deepseek-flash";
+  const model = selectedModel || (await import("./db")).getSetting("ai_model") || process.env.DEEPSEEK_MODEL || "deepseek-flash";
   const res = await fetch(`${base}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },

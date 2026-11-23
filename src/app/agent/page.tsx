@@ -10,6 +10,11 @@ export default function AgentPage() {
     { role: "assistant", content: "你好，我是 NOVA 智能体。你可以让我：查客户、按国家/行业筛客户、新增客户、改状态、查报价单、生成报价单草稿、看平台统计。直接说就行。" },
   ]);
   const [input, setInput] = useState("");
+  const [model, setModel] = useState("");
+  const [models,setModels] = useState<string[]>([]);
+  const [custom,setCustom] = useState("");
+  useEffect(()=>{fetch("/api/agent/models").then(r=>r.json()).then(d=>{setModels(d.models||[]);setModel(d.selected||"")}).catch(()=>{})},[]);
+  async function chooseModel(value:string){setModel(value);await fetch("/api/agent/models",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:value})})}
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const boxRef = useRef<HTMLDivElement>(null);
@@ -30,7 +35,7 @@ export default function AgentPage() {
       const r = await fetch("/api/agent/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history.map((m) => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({ model, messages: history.map((m) => ({ role: m.role, content: m.content })) }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "调用失败");
@@ -73,6 +78,13 @@ export default function AgentPage() {
                 {s}
               </button>
             ))}
+          </div>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <label className="text-xs text-muted" htmlFor="agent-model">本次使用模型</label>
+            <select id="agent-model" disabled={busy} value={model} onChange={e=>void chooseModel(e.target.value)} className="max-w-full text-xs"><option value="">使用设置中的默认模型</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select>
+            <input aria-label="自定义模型 ID" value={custom} onChange={e=>setCustom(e.target.value)} placeholder="输入 DeepSeek 或兼容服务的模型 ID" className="w-72 max-w-full text-xs"/>
+            <button disabled={busy||!custom.trim()} className="rounded border border-line px-3 py-2 text-xs" onClick={async()=>{const value=custom.trim();if(!/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(value)){setError("请输入有效模型 ID");return}await chooseModel(value);setModels(prev=>Array.from(new Set([...prev,value])));setCustom("")}}>添加并使用</button>
+            <span className="text-xs text-faint">沿用设置中的接口和 API Key；模型须由该接口支持。</span>
           </div>
           <div className="flex items-end gap-2">
             <textarea

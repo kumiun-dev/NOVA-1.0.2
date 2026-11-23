@@ -552,3 +552,13 @@ html,body{background:var(--canvas);color:var(--ink)}
 @media(max-width:1023px){.nova-sidebar-toggle{display:none}.nova-overview{padding:24px}.nova-sidebar{width:100%}.nova-sidebar nav{max-height:240px;overflow:auto}.nova-sidebar-profile{padding-top:12px}.nova-main h1{font-size:22px}}
 @media(max-width:639px){.nova-overview{padding:20px 16px 32px}.nova-page-heading{align-items:flex-start}.nova-kpis{grid-template-columns:repeat(2,minmax(0,1fr));padding:4px}.nova-kpi{padding:12px;margin:2px}.nova-kpi>strong{font-size:28px}.nova-coverage{grid-template-columns:1fr;gap:16px;margin:20px 0}.nova-overview-panels{grid-template-columns:1fr;gap:16px}.nova-country-panel{grid-column:auto}.nova-country-list{display:flex}.nova-panel{padding:20px}.nova-rates{padding:20px}.nova-rates-grid{grid-template-columns:1fr 1fr;gap:24px 0}.nova-rate{padding:0 16px}.nova-rate:nth-child(odd){padding-left:0;border-left:0}.nova-rate strong{font-size:24px}.nova-panel-heading{margin-bottom:20px}.nova-stage-row{gap:8px}.nova-load-error{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.nova-shell *{transition:none!important;animation:none!important}}
+
+/* Theme-owned result surfaces must override legacy utility remapping. */
+.nova-shell [data-pricing-result]{background:var(--accent-fill)!important;color:var(--on-accent)!important}
+.nova-shell [data-pricing-result] :is(p,span){color:var(--on-accent)!important}
+.nova-shell [data-pricing-result] button{background:transparent!important;color:var(--on-accent)!important;border-color:currentColor!important}
+.nova-shell [data-pricing-result]>div:last-of-type{background:color-mix(in srgb,var(--on-accent) 12%,transparent)!important;color:var(--on-accent)!important}
+.nova-acquisition-stripe{background:var(--accent-fill)}
+
+.nova-shell [data-funnel-fill]{color:var(--on-accent)!important}
+.nova-shell [data-funnel-fill][class~="text-[#634D91]"]{color:var(--muted)!important}
